@@ -3,14 +3,14 @@ require 'spec_helper'
 describe Lexster::ModelAdditions do
   context "search" do
     let(:index_name) { "articles_search_index_#{Time.now.to_f.to_s.gsub('.', '')}" }
-    
+
     it "should index and find node in fulltext" do
       Lexster.db.create_node_index(index_name, "fulltext", "lucene")
-      
+
       n = Neography::Node.create(name: "test hello world", year: 2012)
       Lexster.db.add_node_to_index(index_name, "name", n.name, n)
       Lexster.db.add_node_to_index(index_name, "year", n.year, n)
-      
+
       [
         "name:test",
         "year:2012",
@@ -21,7 +21,7 @@ describe Lexster::ModelAdditions do
         Lexster.db.send(:get_id, results).should == n.neo_id
       }
     end
-    
+
     it "should index item on save" do
       r = rand(1000000)
       article = Article.create!(title: "Hello world #{r}", body: "Lorem ipsum dolor sit amet", year: r)
@@ -38,24 +38,24 @@ describe Lexster::ModelAdditions do
         Lexster.db.send(:get_id, results).should == article.neo_node.neo_id
       end
     end
-    
+
     context "search session" do
       it "should return a search session" do
         Article.neo_search("hello").should be_a(Lexster::SearchSession)
       end
-      
+
       it "should find hits" do
         article = Article.create!(title: "Hello world", body: "Lorem ipsum dolor sit amet", year: 2012)
-        
+
         Article.neo_search("hello").hits.should == [ article.neo_node ]
       end
-      
+
       it "should find results with a search string" do
         article = Article.create!(title: "Hello world", body: "Lorem ipsum dolor sit amet", year: 2012)
 
         Article.neo_search("hello").results.should == [ article ]
       end
-      
+
       it "should find results with a hash" do
         articles = [
           Article.create!(title: "How to draw manga", body: "Lorem ipsum dolor sit amet", year: 2012),

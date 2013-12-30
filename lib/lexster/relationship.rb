@@ -18,7 +18,6 @@ module Lexster
       relationship
     end
 
-
     module ClassMethods
       def delete_command
         :delete_relationship
