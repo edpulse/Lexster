@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Neoid::Relationship do
+describe Lexster::Relationship do
   let(:user) { User.create!(name: "Elad Ossadon", slug: "elado") }
   let(:movie) { Movie.create!(name: "Memento", slug: "memento-1999", year: 1999) }
   

@@ -1,8 +1,8 @@
-module Neoid
+module Lexster
   module Node
     def self.from_hash(hash)
       node = Neography::Node.new(hash)
-      node.neo_server = Neoid.db
+      node.neo_server = Lexster.db
       node
     end
 
@@ -22,26 +22,26 @@ module Neoid
       end
 
       def neo_model_index
-        return nil unless Neoid.config.enable_per_model_indexes
+        return nil unless Lexster.config.enable_per_model_indexes
 
-        Neoid::logger.info "Node#neo_model_index #{neo_subref_rel_type}"
+        Lexster::logger.info "Node#neo_model_index #{neo_subref_rel_type}"
 
         gremlin_query = <<-GREMLIN
           g.createManualIndex(neo_model_index_name, Vertex.class);
         GREMLIN
 
-        # Neoid.logger.info "subref query:\n#{gremlin_query}"
+        # Lexster.logger.info "subref query:\n#{gremlin_query}"
 
         script_vars = { neo_model_index_name: neo_model_index_name }
 
-        Neoid.execute_script_or_add_to_batch gremlin_query, script_vars
+        Lexster.execute_script_or_add_to_batch gremlin_query, script_vars
       end
 
       def neo_subref_node
-        return nil unless Neoid.config.enable_subrefs
+        return nil unless Lexster.config.enable_subrefs
 
         @neo_subref_node ||= begin
-          Neoid::logger.info "Node#neo_subref_node #{neo_subref_rel_type}"
+          Lexster::logger.info "Node#neo_subref_node #{neo_subref_rel_type}"
 
           gremlin_query = <<-GREMLIN
             q = g.v(0).out(neo_subref_rel_type);
@@ -56,15 +56,15 @@ module Neoid
             subref
           GREMLIN
 
-          # Neoid.logger.info "subref query:\n#{gremlin_query}"
+          # Lexster.logger.info "subref query:\n#{gremlin_query}"
 
           script_vars = {
             neo_subref_rel_type: neo_subref_rel_type,
             name: self.name
           }
 
-          Neoid.execute_script_or_add_to_batch gremlin_query, script_vars do |value|
-            Neoid::Node.from_hash(value)
+          Lexster.execute_script_or_add_to_batch gremlin_query, script_vars do |value|
+            Lexster::Node.from_hash(value)
           end
         end
       end
@@ -74,21 +74,21 @@ module Neoid
       end
 
       def neo_search(term, options = {})
-        Neoid.search(self, term, options)
+        Lexster.search(self, term, options)
       end
     end
     
     module InstanceMethods
       def neo_find_by_id
-        # Neoid::logger.info "Node#neo_find_by_id #{self.class.neo_index_name} #{self.id}"
-        node = Neoid.db.get_node_auto_index(Neoid::UNIQUE_ID_KEY, self.neo_unique_id)
-        node.present? ? Neoid::Node.from_hash(node[0]) : nil
+        # Lexster::logger.info "Node#neo_find_by_id #{self.class.neo_index_name} #{self.id}"
+        node = Lexster.db.get_node_auto_index(Lexster::UNIQUE_ID_KEY, self.neo_unique_id)
+        node.present? ? Lexster::Node.from_hash(node[0]) : nil
       end
       
       def _neo_save
-        return unless Neoid.enabled?
+        return unless Lexster.enabled?
 
-        data = self.to_neo.merge(ar_type: self.class.name, ar_id: self.id, Neoid::UNIQUE_ID_KEY => self.neo_unique_id)
+        data = self.to_neo.merge(ar_type: self.class.name, ar_id: self.id, Lexster::UNIQUE_ID_KEY => self.neo_unique_id)
         data.reject! { |k, v| v.nil? }
 
         gremlin_query = <<-GREMLIN
@@ -115,30 +115,30 @@ module Neoid
         GREMLIN
 
          script_vars = {
-          unique_id_key: Neoid::UNIQUE_ID_KEY,
+          unique_id_key: Lexster::UNIQUE_ID_KEY,
           node_data: data,
           unique_id: self.neo_unique_id,
-          enable_subrefs: Neoid.config.enable_subrefs,
-          enable_model_index: Neoid.config.enable_per_model_indexes && self.class.neoid_config.enable_model_index
+          enable_subrefs: Lexster.config.enable_subrefs,
+          enable_model_index: Lexster.config.enable_per_model_indexes && self.class.lexster_config.enable_model_index
         }
 
-        if Neoid.config.enable_subrefs
+        if Lexster.config.enable_subrefs
           script_vars.update(
             subref_id: self.class.neo_subref_node.neo_id,
             neo_subref_node_rel_type: self.class.neo_subref_node_rel_type
           )
         end
 
-        if Neoid.config.enable_per_model_indexes && self.class.neoid_config.enable_model_index
+        if Lexster.config.enable_per_model_indexes && self.class.lexster_config.enable_model_index
           script_vars.update(
             neo_model_index_name: self.class.neo_model_index_name
           )
         end
 
-        Neoid::logger.info "Node#neo_save #{self.class.name} #{self.id}"
+        Lexster::logger.info "Node#neo_save #{self.class.name} #{self.id}"
 
-        node = Neoid.execute_script_or_add_to_batch(gremlin_query, script_vars) do |value|
-          @_neo_representation = Neoid::Node.from_hash(value)
+        node = Lexster.execute_script_or_add_to_batch(gremlin_query, script_vars) do |value|
+          @_neo_representation = Lexster::Node.from_hash(value)
         end.then do |result|
           neo_search_index
         end
@@ -147,21 +147,21 @@ module Neoid
       end
 
       def neo_search_index
-        return if self.class.neoid_config.search_options.blank? || (
-          self.class.neoid_config.search_options.index_fields.blank? &&
-          self.class.neoid_config.search_options.fulltext_fields.blank?
+        return if self.class.lexster_config.search_options.blank? || (
+          self.class.lexster_config.search_options.index_fields.blank? &&
+          self.class.lexster_config.search_options.fulltext_fields.blank?
         )
 
-        Neoid.ensure_default_fulltext_search_index
+        Lexster.ensure_default_fulltext_search_index
 
-        Neoid.db.add_node_to_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, 'ar_type', self.class.name, neo_node.neo_id)
+        Lexster.db.add_node_to_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, 'ar_type', self.class.name, neo_node.neo_id)
 
-        self.class.neoid_config.search_options.fulltext_fields.each do |field, options|
-          Neoid.db.add_node_to_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, "#{field}_fulltext", neo_helper_get_field_value(field, options), neo_node.neo_id)
+        self.class.lexster_config.search_options.fulltext_fields.each do |field, options|
+          Lexster.db.add_node_to_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, "#{field}_fulltext", neo_helper_get_field_value(field, options), neo_node.neo_id)
         end
 
-        self.class.neoid_config.search_options.index_fields.each do |field, options|
-          Neoid.db.add_node_to_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, field, neo_helper_get_field_value(field, options), neo_node.neo_id)
+        self.class.lexster_config.search_options.index_fields.each do |field, options|
+          Lexster.db.add_node_to_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, field, neo_helper_get_field_value(field, options), neo_node.neo_id)
         end
 
         neo_node
@@ -176,7 +176,7 @@ module Neoid
       end
       
       def neo_load(hash)
-        Neoid::Node.from_hash(hash)
+        Lexster::Node.from_hash(hash)
       end
       
       def neo_node
@@ -188,7 +188,7 @@ module Neoid
       end
 
       def neo_before_relationship_through_remove(record)
-        rel_model, foreign_key_of_owner, foreign_key_of_record = Neoid::Relationship.meta_data[self.class.name.to_s][record.class.name.to_s]
+        rel_model, foreign_key_of_owner, foreign_key_of_record = Lexster::Relationship.meta_data[self.class.name.to_s][record.class.name.to_s]
         rel_model = rel_model.to_s.constantize
         @__neo_temp_rels ||= {}
         @__neo_temp_rels[record] = rel_model.where(foreign_key_of_owner => self.id, foreign_key_of_record => record.id).first
@@ -201,10 +201,10 @@ module Neoid
     end
       
     def self.included(receiver)
-      receiver.send :include, Neoid::ModelAdditions
+      receiver.send :include, Lexster::ModelAdditions
       receiver.extend         ClassMethods
       receiver.send :include, InstanceMethods
-      Neoid.node_models << receiver
+      Lexster.node_models << receiver
     end
   end
 end

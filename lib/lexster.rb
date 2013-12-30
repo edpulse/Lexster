@@ -1,20 +1,20 @@
 require 'neography'
-require 'neoid/version'
-require 'neoid/config'
-require 'neoid/model_config'
-require 'neoid/model_additions'
-require 'neoid/search_session'
-require 'neoid/node'
-require 'neoid/relationship'
-require 'neoid/batch'
-require 'neoid/database_cleaner'
-require 'neoid/railtie' if defined?(Rails)
+require 'lexster/version'
+require 'lexster/config'
+require 'lexster/model_config'
+require 'lexster/model_additions'
+require 'lexster/search_session'
+require 'lexster/node'
+require 'lexster/relationship'
+require 'lexster/batch'
+require 'lexster/database_cleaner'
+require 'lexster/railtie' if defined?(Rails)
 
-module Neoid
-  DEFAULT_FULLTEXT_SEARCH_INDEX_NAME = :neoid_default_search_index
+module Lexster
+  DEFAULT_FULLTEXT_SEARCH_INDEX_NAME = :lexster_default_search_index
   NODE_AUTO_INDEX_NAME = 'node_auto_index'
   RELATIONSHIP_AUTO_INDEX_NAME = 'relationship_auto_index'
-  UNIQUE_ID_KEY = 'neoid_unique_id'
+  UNIQUE_ID_KEY = 'lexster_unique_id'
 
   class << self
     attr_accessor :db
@@ -33,7 +33,7 @@ module Neoid
 
     def config
       @config ||= begin
-        c = Neoid::Config.new
+        c = Lexster::Config.new
 
         # default
         c.enable_subrefs = true
@@ -49,7 +49,7 @@ module Neoid
 
     def initialize_all
       @env_loaded = true
-      logger.info "Neoid initialize_all"
+      logger.info "Lexster initialize_all"
       initialize_relationships
       initialize_server
     end
@@ -61,12 +61,12 @@ module Neoid
     end
     
     def db
-      raise "Must set Neoid.db with a Neography::Rest instance" unless @db
+      raise "Must set Lexster.db with a Neography::Rest instance" unless @db
       @db
     end
 
     def batch(options={}, &block)
-      Neoid::Batch.new(options, &block).run
+      Lexster::Batch.new(options, &block).run
     end
     
     def logger
@@ -74,7 +74,7 @@ module Neoid
     end
     
     def ref_node
-      @ref_node ||= Neography::Node.load(Neoid.db.get_root['self'])
+      @ref_node ||= Neography::Node.load(Lexster.db.get_root['self'])
     end
     
     def reset_cached_variables
@@ -82,17 +82,17 @@ module Neoid
     end
     
     def clean_db(confirm)
-      puts "must call with confirm: Neoid.clean_db(:yes_i_am_sure)" and return unless confirm == :yes_i_am_sure
-      Neoid::NeoDatabaseCleaner.clean_db
+      puts "must call with confirm: Lexster.clean_db(:yes_i_am_sure)" and return unless confirm == :yes_i_am_sure
+      Lexster::NeoDatabaseCleaner.clean_db
     end
     
 
     def enabled=(flag)
-      Thread.current[:neoid_enabled] = flag
+      Thread.current[:lexster_enabled] = flag
     end
 
     def enabled
-      flag = Thread.current[:neoid_enabled]
+      flag = Thread.current[:lexster_enabled]
       # flag should be set by the middleware. in case it wasn't (non-rails app or console), default it to true
       flag.nil? ? true : flag
     end
@@ -106,21 +106,21 @@ module Neoid
     end
 
     def execute_script_or_add_to_batch(gremlin_query, script_vars)
-      if Neoid::Batch.current_batch
+      if Lexster::Batch.current_batch
         # returns a SingleResultPromiseProxy!
-        Neoid::Batch.current_batch << [:execute_script, gremlin_query, script_vars]
+        Lexster::Batch.current_batch << [:execute_script, gremlin_query, script_vars]
       else
-        value = Neoid.db.execute_script(gremlin_query, script_vars)
+        value = Lexster.db.execute_script(gremlin_query, script_vars)
 
         value = yield(value) if block_given?
 
-        Neoid::BatchPromiseProxy.new(value)
+        Lexster::BatchPromiseProxy.new(value)
       end
     end
 
     # create a fulltext index if not exists
     def ensure_default_fulltext_search_index
-      Neoid.db.create_node_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, 'fulltext', 'lucene') unless (indexes = Neoid.db.list_node_indexes) && indexes[DEFAULT_FULLTEXT_SEARCH_INDEX_NAME]
+      Lexster.db.create_node_index(DEFAULT_FULLTEXT_SEARCH_INDEX_NAME, 'fulltext', 'lucene') unless (indexes = Lexster.db.list_node_indexes) && indexes[DEFAULT_FULLTEXT_SEARCH_INDEX_NAME]
     end
 
     def search(types, term, options = {})
@@ -137,7 +137,7 @@ module Neoid
 
         case term
         when String
-          search_in_fields = type.neoid_config.search_options.fulltext_fields.keys
+          search_in_fields = type.lexster_config.search_options.fulltext_fields.keys
           next if search_in_fields.empty?
           query_for_type << search_in_fields.map{ |field| generate_field_query(field, term, true, options[:match_type]) }.join(" OR ")
         when Hash
@@ -151,7 +151,7 @@ module Neoid
 
       query = "(#{query.join(") OR (")})"
 
-      logger.info "Neoid query #{query}"
+      logger.info "Lexster query #{query}"
 
       gremlin_query = <<-GREMLIN
         #{options[:before_query]}
@@ -166,7 +166,7 @@ module Neoid
 
       logger.info "[NEOID] search:\n#{gremlin_query}"
 
-      results = Neoid.db.execute_script(gremlin_query)
+      results = Lexster.db.execute_script(gremlin_query)
 
       SearchSession.new(results, *types)
     end
@@ -195,19 +195,19 @@ module Neoid
       end
 
       def initialize_relationships
-        logger.info "Neoid initialize_relationships"
+        logger.info "Lexster initialize_relationships"
         relationship_models.each do |rel_model|
           Relationship.initialize_relationship(rel_model)
         end
       end
 
       def initialize_auto_index
-        logger.info "Neoid initialize_auto_index"
-        Neoid.db.set_node_auto_index_status(true)
-        Neoid.db.add_node_auto_index_property(UNIQUE_ID_KEY)
+        logger.info "Lexster initialize_auto_index"
+        Lexster.db.set_node_auto_index_status(true)
+        Lexster.db.add_node_auto_index_property(UNIQUE_ID_KEY)
 
-        Neoid.db.set_relationship_auto_index_status(true)
-        Neoid.db.add_relationship_auto_index_property(UNIQUE_ID_KEY)
+        Lexster.db.set_relationship_auto_index_status(true)
+        Lexster.db.add_relationship_auto_index_property(UNIQUE_ID_KEY)
       end
 
       def initialize_subrefs
@@ -217,7 +217,7 @@ module Neoid
           klass.reset_neo_subref_node
         end
 
-        logger.info "Neoid initialize_subrefs"
+        logger.info "Lexster initialize_subrefs"
         batch do
           node_models.each(&:neo_subref_node)
         end.then do |results|
@@ -230,7 +230,7 @@ module Neoid
       def initialize_per_model_indexes
         return unless config.enable_per_model_indexes
 
-        logger.info "Neoid initialize_subrefs"
+        logger.info "Lexster initialize_subrefs"
         batch do
           node_models.each(&:neo_model_index)
         end

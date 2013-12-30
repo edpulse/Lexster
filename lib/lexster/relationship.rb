@@ -1,14 +1,14 @@
-module Neoid
+module Lexster
   module Relationship
     # this is a proxy that delays loading of start_node and end_node from Neo4j until accessed.
     # the original Neography Relatioship loaded them on initialization
     class RelationshipLazyProxy < ::Neography::Relationship
       def start_node
-        @start_node_from_db ||= @start_node = Neography::Node.load(@start_node, Neoid.db)
+        @start_node_from_db ||= @start_node = Neography::Node.load(@start_node, Lexster.db)
       end
 
       def end_node
-        @end_node_from_db ||= @end_node = Neography::Node.load(@end_node, Neoid.db)
+        @end_node_from_db ||= @end_node = Neography::Node.load(@end_node, Lexster.db)
       end
     end
 
@@ -27,15 +27,15 @@ module Neoid
 
     module InstanceMethods
       def neo_find_by_id
-        results = Neoid.db.get_relationship_auto_index(Neoid::UNIQUE_ID_KEY, self.neo_unique_id)
-        relationship = results.present? ? Neoid::Relationship.from_hash(results[0]) : nil
+        results = Lexster.db.get_relationship_auto_index(Lexster::UNIQUE_ID_KEY, self.neo_unique_id)
+        relationship = results.present? ? Lexster::Relationship.from_hash(results[0]) : nil
         relationship
       end
       
       def _neo_save
-        return unless Neoid.enabled?
+        return unless Lexster.enabled?
         
-        options = self.class.neoid_config.relationship_options
+        options = self.class.lexster_config.relationship_options
         
         start_item = self.send(options[:start_node])
         end_item = self.send(options[:end_node])
@@ -46,7 +46,7 @@ module Neoid
         start_item.neo_node
         end_item.neo_node
 
-        data = self.to_neo.merge(ar_type: self.class.name, ar_id: self.id, Neoid::UNIQUE_ID_KEY => self.neo_unique_id)
+        data = self.to_neo.merge(ar_type: self.class.name, ar_id: self.id, Lexster::UNIQUE_ID_KEY => self.neo_unique_id)
         data.reject! { |k, v| v.nil? }
 
         rel_type = options[:type].is_a?(Proc) ? options[:type].call(self) : options[:type]
@@ -76,7 +76,7 @@ module Neoid
         GREMLIN
 
          script_vars = {
-          unique_id_key: Neoid::UNIQUE_ID_KEY,
+          unique_id_key: Lexster::UNIQUE_ID_KEY,
           relationship_data: data,
           unique_id: self.neo_unique_id,
           start_node_unique_id: start_item.neo_unique_id,
@@ -84,17 +84,17 @@ module Neoid
           rel_type: rel_type
         }
 
-        Neoid::logger.info "Relationship#neo_save #{self.class.name} #{self.id}"
+        Lexster::logger.info "Relationship#neo_save #{self.class.name} #{self.id}"
         
-        relationship = Neoid.execute_script_or_add_to_batch gremlin_query, script_vars do |value|
-          Neoid::Relationship.from_hash(value)
+        relationship = Lexster.execute_script_or_add_to_batch gremlin_query, script_vars do |value|
+          Lexster::Relationship.from_hash(value)
         end
 
         relationship
       end
       
       def neo_load(hash)
-        Neoid::Relationship.from_hash(hash)
+        Lexster::Relationship.from_hash(hash)
       end
 
       def neo_relationship
@@ -103,13 +103,13 @@ module Neoid
     end
 
     def self.included(receiver)
-      receiver.send :include, Neoid::ModelAdditions
+      receiver.send :include, Lexster::ModelAdditions
       receiver.send :include, InstanceMethods
       receiver.extend         ClassMethods
       
-      initialize_relationship receiver if Neoid.env_loaded
+      initialize_relationship receiver if Lexster.env_loaded
 
-      Neoid.relationship_models << receiver
+      Lexster.relationship_models << receiver
     end
 
     def self.meta_data
@@ -143,7 +143,7 @@ module Neoid
         # movie_id
         foreign_key_of_record = many_to_many.source_reflection.foreign_key
 
-        (Neoid::Relationship.meta_data ||= {}).tap do |data|
+        (Lexster::Relationship.meta_data ||= {}).tap do |data|
           (data[belongs_to.klass.name.to_s] ||= {}).tap do |model_data|
             model_data[many_to_many.klass.name.to_s] = [rel_model.name.to_s, foreign_key_of_owner, foreign_key_of_record]
           end

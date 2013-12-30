@@ -19,9 +19,9 @@ class User < ActiveRecord::Base
     likes.where(movie_id: movie.id, user_id: self.id).destroy_all
   end
   
-  include Neoid::Node
+  include Lexster::Node
   
-  neoidable do |c|
+  lexsterable do |c|
     c.field :name
     c.field :slug
   end
@@ -33,9 +33,9 @@ class Movie < ActiveRecord::Base
   has_many :likes
   has_many :users, through: :likes
   
-  include Neoid::Node
+  include Lexster::Node
   
-  neoidable do |c|
+  lexsterable do |c|
     c.field :name
     c.field :slug
     c.field :year
@@ -56,9 +56,9 @@ class UserFollow < ActiveRecord::Base
   belongs_to :user
   belongs_to :item, polymorphic: true
   
-  include Neoid::Relationship
+  include Lexster::Relationship
   
-  neoidable do |c|
+  lexsterable do |c|
     c.relationship start_node: :user, end_node: :item, type: :follows
   end
 end
@@ -69,9 +69,9 @@ class Like < ActiveRecord::Base
   belongs_to :user
   belongs_to :movie
   
-  include Neoid::Relationship
+  include Lexster::Relationship
   
-  neoidable do |c|
+  lexsterable do |c|
     c.relationship start_node: :user, end_node: :movie, type: :likes
     c.field :rate
   end
@@ -79,8 +79,8 @@ end
 
 class Article < ActiveRecord::Base
   include ActiveModel::Validations::Callbacks
-  include Neoid::Node
-  neoidable do |c|
+  include Lexster::Node
+  lexsterable do |c|
     c.field :title
     c.field :year
     c.field :title_length do
@@ -99,8 +99,8 @@ end
 
 class NoAutoIndexNode < ActiveRecord::Base
   include ActiveModel::Validations::Callbacks
-  include Neoid::Node
-  neoidable auto_index: false do |c|
+  include Lexster::Node
+  lexsterable auto_index: false do |c|
     c.field :name
   end
 end

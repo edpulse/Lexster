@@ -1,17 +1,17 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "neoid/version"
+require "lexster/version"
 
 Gem::Specification.new do |s|
-  s.name        = "neoid"
-  s.version     = Neoid::VERSION
-  s.authors     = ["Elad Ossadon"]
-  s.email       = ["elad@ossadon.com"]
+  s.name        = "lexster"
+  s.version     = Lexster::VERSION
+  s.authors     = ["Nelson Wittwer, Elad Ossadon"]
+  s.email       = ["nelsonwittwer@gmail.com"]
   s.homepage    = ""
-  s.summary     = %q{Neo4j for ActiveRecord}
-  s.description = %q{Extend Ruby on Rails ActiveRecord with Neo4j nodes. Keep RDBMS and utilize the power of Neo4j queries}
+  s.summary     = %q{Titan for ActiveRecord}
+  s.description = %q{Extend Ruby on Rails ActiveRecord with Titan nodes. Keep RDBMS and utilize the power of Gremlin queries. Fork of Neoid.}
 
-  s.rubyforge_project = "neoid"
+  s.rubyforge_project = "lexster"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

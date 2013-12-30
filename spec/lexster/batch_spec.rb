@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe Neoid::ModelAdditions do
+describe Lexster::ModelAdditions do
   context "promises" do
     it "should run scripts in a batch and return results" do
-      Neoid.batch do |batch|
+      Lexster.batch do |batch|
         batch << [:execute_script, "1"]
         batch << [:execute_script, "2"]
       end.then do |results|
@@ -12,7 +12,7 @@ describe Neoid::ModelAdditions do
     end
 
     it "should run scripts in a batch with batch_size and flush batch when it's full" do
-      Neoid.batch(batch_size: 3) do |batch|
+      Lexster.batch(batch_size: 3) do |batch|
         (0...9).each do |i|
           batch.count.should == i % 3
           batch << [:execute_script, i.to_s]
@@ -24,7 +24,7 @@ describe Neoid::ModelAdditions do
     end
 
     it "should run scripts in a batch with batch_size and return all results" do
-      Neoid.batch(batch_size: 2) do |batch|
+      Lexster.batch(batch_size: 2) do |batch|
         (1..6).each do |i|
           batch << [:execute_script, i.to_s]
         end
@@ -34,11 +34,11 @@ describe Neoid::ModelAdditions do
     end
 
     it "should return results then process them" do
-      node_1 = Neoid.db.create_node
-      node_2 = Neoid.db.create_node
-      rel = Neoid.db.create_relationship(:related, node_1, node_2)
+      node_1 = Lexster.db.create_node
+      node_2 = Lexster.db.create_node
+      rel = Lexster.db.create_relationship(:related, node_1, node_2)
 
-      Neoid.batch do |batch|
+      Lexster.batch do |batch|
         batch << [:execute_script, "g.v(neo_id)", neo_id: node_1['self'].split('/').last.to_i]
         batch << [:execute_script, "g.v(neo_id)", neo_id: node_2['self'].split('/').last]
         batch << [:execute_script, "g.e(neo_id)", neo_id: rel['self'].split('/').last]
@@ -52,7 +52,7 @@ describe Neoid::ModelAdditions do
     it "should remember what to do after each script has executed, and perform it when batch is flushed" do
       then_results = []
 
-      Neoid.batch do |batch|
+      Lexster.batch do |batch|
         (batch << [:execute_script, "1"]).then { |res| then_results << res }
         (batch << [:execute_script, "2"]).then { |res| then_results << res }
         batch << [:execute_script, "3"]
@@ -68,7 +68,7 @@ describe Neoid::ModelAdditions do
     it "should not execute until batch is done" do
       u1 = u2 = nil
 
-      res = Neoid.batch do
+      res = Lexster.batch do
         u1 = User.create!(name: "U1")
         u2 = User.create!(name: "U2")
 
@@ -86,7 +86,7 @@ describe Neoid::ModelAdditions do
       u1 = User.create!(name: "U1")
       u2 = User.create!(name: "U2")
 
-      res = Neoid.batch do
+      res = Lexster.batch do
         u1.name = "U1 update"
         u2.name = "U2 update"
 
@@ -109,21 +109,21 @@ describe Neoid::ModelAdditions do
     #   u1 = User.create!(name: "U1")
     #   u2 = User.create!(name: "U2")
 
-    #   res = Neoid.batch do
+    #   res = Lexster.batch do
     #     u1_node_id = u1.neo_find_by_id.neo_id
     #     u2_node_id = u2.neo_find_by_id.neo_id
 
     #     u1.destroy
     #     u2.destroy
 
-    #     Neoid.db.get_node(u1_node_id).should_not be_nil
-    #     Neoid.db.get_node(u2_node_id).should_not be_nil
+    #     Lexster.db.get_node(u1_node_id).should_not be_nil
+    #     Lexster.db.get_node(u2_node_id).should_not be_nil
     #   end
 
     #   res.length.should == 2
 
-    #   Neoid.db.get_node(u1_node_id).should be_nil
-    #   Neoid.db.get_node(u2_node_id).should be_nil
+    #   Lexster.db.get_node(u1_node_id).should be_nil
+    #   Lexster.db.get_node(u2_node_id).should be_nil
     # end
   end
 
@@ -136,7 +136,7 @@ describe Neoid::ModelAdditions do
       user
       movie
 
-      res = Neoid.batch do |batch|
+      res = Lexster.batch do |batch|
         user.like! movie
 
         user.likes.last.neo_find_by_id.should be_nil
@@ -156,7 +156,7 @@ describe Neoid::ModelAdditions do
       user.neo_destroy
       movie.neo_destroy
 
-      res = Neoid.batch do |batch|
+      res = Lexster.batch do |batch|
         user.like! movie
 
         user.likes.last.neo_find_by_id.should be_nil

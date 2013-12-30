@@ -1,4 +1,4 @@
-module Neoid
+module Lexster
   class Batch
     def default_options=(value)
       @default_options = value
@@ -9,15 +9,15 @@ module Neoid
     end
 
     def self.current_batch
-      Thread.current[:neoid_current_batch]
+      Thread.current[:lexster_current_batch]
     end
 
     def self.current_batch=(batch)
-      Thread.current[:neoid_current_batch] = batch
+      Thread.current[:lexster_current_batch] = batch
     end
 
     def self.reset_current_batch
-      Thread.current[:neoid_current_batch] = nil
+      Thread.current[:lexster_current_batch] = nil
     end
 
     def initialize(options={}, &block)
@@ -71,7 +71,7 @@ module Neoid
         self.class.reset_current_batch
       end
 
-      Neoid.logger.info "Neoid batch (#{commands.length} commands)"
+      Lexster.logger.info "Lexster batch (#{commands.length} commands)"
 
       flush_batch
 
@@ -83,12 +83,12 @@ module Neoid
         return [] if commands.empty?
         current_results = nil
 
-        # results = Neoid.db.batch(*commands).collect { |result| result['body'] }
+        # results = Lexster.db.batch(*commands).collect { |result| result['body'] }
 
         benchmark = Benchmark.measure {
-          current_results = Neoid.db.batch(*commands).collect { |result| result['body'] }
+          current_results = Lexster.db.batch(*commands).collect { |result| result['body'] }
         }
-        Neoid.logger.info "Neoid batch (#{commands.length} commands) - #{benchmark}"
+        Lexster.logger.info "Lexster batch (#{commands.length} commands) - #{benchmark}"
         commands.clear
 
         process_results(current_results)
@@ -105,8 +105,8 @@ module Neoid
           return result unless result.is_a?(Hash) && result['self'] && result['self'][%r[^https?://.*/(node|relationship)/\d+]]
 
           type = case $1
-          when 'node' then Neoid::Node
-          when 'relationship' then Neoid::Relationship
+          when 'node' then Lexster::Node
+          when 'relationship' then Lexster::Relationship
           else return result
           end
 
@@ -133,11 +133,11 @@ module Neoid
   end
 
   # returned from adding (<<) an item to a batch in a batch block:
-  # Neoid.batch { |batch| (batch << [:neography_command, param]).is_a?(SingleResultPromiseProxy) }
+  # Lexster.batch { |batch| (batch << [:neography_command, param]).is_a?(SingleResultPromiseProxy) }
   # so a `.then` can be chained:
-  # Neoid.batch { |batch| (batch << [:neography_command, param]).then { |result| puts result } }
+  # Lexster.batch { |batch| (batch << [:neography_command, param]).then { |result| puts result } }
   # the `then` is called once the batch is flushed with the result of the single job in the batch
-  # it proxies all methods to the result, so in case it is returned (like in Neoid.execute_script_or_add_to_batch)
+  # it proxies all methods to the result, so in case it is returned (like in Lexster.execute_script_or_add_to_batch)
   # the result of the method will be proxied to the result from the batch. See Node#neo_save
   class SingleResultPromiseProxy
     def initialize(*args)

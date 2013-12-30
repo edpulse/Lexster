@@ -1,4 +1,4 @@
-module Neoid
+module Lexster
   class SearchSession
     def initialize(response, *models)
       @response = response || []

@@ -1,4 +1,4 @@
-module Neoid
+module Lexster
   class ModelConfig
     attr_reader :properties
     attr_reader :search_options
@@ -29,7 +29,7 @@ module Neoid
     end
     
     def inspect
-      "#<Neoid::ModelConfig @properties=#{properties.inspect} @search_options=#{@search_options.inspect}>"
+      "#<Lexster::ModelConfig @properties=#{properties.inspect} @search_options=#{@search_options.inspect}>"
     end
   end
   
@@ -51,7 +51,7 @@ module Neoid
     end
     
     def inspect
-      "#<Neoid::SearchConfig @index_fields=#{index_fields.inspect} @fulltext_fields=#{fulltext_fields.inspect}>"
+      "#<Lexster::SearchConfig @index_fields=#{index_fields.inspect} @fulltext_fields=#{fulltext_fields.inspect}>"
     end
   end
 end

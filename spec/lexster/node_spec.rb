@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Neoid::Node do
+describe Lexster::Node do
   context "create graph nodes" do
     it "should call neo_save after model creation" do
       user = User.new(name: "Elad Ossadon")
@@ -67,64 +67,64 @@ describe Neoid::Node do
 
   context "subrefs" do
     it "should connect subrefs to reference node" do
-      old, Neoid.config.enable_subrefs = Neoid.config.enable_subrefs, true
+      old, Lexster.config.enable_subrefs = Lexster.config.enable_subrefs, true
 
-      Neoid.send(:initialize_subrefs)
+      Lexster.send(:initialize_subrefs)
       
       begin
-        Neoid.ref_node.rel(:outgoing, :users_subref).should_not be_nil
+        Lexster.ref_node.rel(:outgoing, :users_subref).should_not be_nil
       ensure
-        Neoid.config.enable_subrefs = old
+        Lexster.config.enable_subrefs = old
       end
     end
 
     it "should create a relationship with a subref node" do
-      old, Neoid.config.enable_subrefs = Neoid.config.enable_subrefs, true
+      old, Lexster.config.enable_subrefs = Lexster.config.enable_subrefs, true
 
-      Neoid.send(:initialize_subrefs)
+      Lexster.send(:initialize_subrefs)
       
       begin
         user = User.create!(name: "Elad")
         user.neo_node.rel(:incoming, :users).should_not be_nil
       ensure
-        Neoid.config.enable_subrefs = old
+        Lexster.config.enable_subrefs = old
       end
     end
 
     it "should not create a relationship with a subref node if disabled" do
-      old, Neoid.config.enable_subrefs = Neoid.config.enable_subrefs, false
+      old, Lexster.config.enable_subrefs = Lexster.config.enable_subrefs, false
 
       begin
         user = User.create!(name: "Elad")
         user.neo_node.rel(:incoming, :users_subref).should be_nil
       ensure
-        Neoid.config.enable_subrefs = old
+        Lexster.config.enable_subrefs = old
       end
     end
   end
 
   context "per_model_indexes" do
     it "should create a relationship with a subref node" do
-      old, Neoid.config.enable_per_model_indexes = Neoid.config.enable_per_model_indexes, true
+      old, Lexster.config.enable_per_model_indexes = Lexster.config.enable_per_model_indexes, true
 
-      Neoid.send(:initialize_per_model_indexes)
+      Lexster.send(:initialize_per_model_indexes)
 
       begin
         user = User.create!(name: "Elad")
-        Neoid.db.get_node_index(User.neo_model_index_name, 'ar_id', user.id).should_not be_nil
+        Lexster.db.get_node_index(User.neo_model_index_name, 'ar_id', user.id).should_not be_nil
       ensure
-        Neoid.config.enable_per_model_indexes = old
+        Lexster.config.enable_per_model_indexes = old
       end
     end
 
     it "should not create a relationship with a subref node if disabled" do
-      old, Neoid.config.enable_per_model_indexes = Neoid.config.enable_per_model_indexes, false
+      old, Lexster.config.enable_per_model_indexes = Lexster.config.enable_per_model_indexes, false
 
       begin
         user = User.create!(name: "Elad")
-        expect { Neoid.db.get_node_index(User.neo_model_index_name, 'ar_id', user.id) }.to raise_error(Neography::NotFoundException)
+        expect { Lexster.db.get_node_index(User.neo_model_index_name, 'ar_id', user.id) }.to raise_error(Neography::NotFoundException)
       ensure
-        Neoid.config.enable_per_model_indexes = old
+        Lexster.config.enable_per_model_indexes = old
       end
     end
   end

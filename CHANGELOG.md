@@ -6,12 +6,12 @@
 
 ### Breaking changes:
 
-Model indexes (such as `users_index`) are now turned off by default. Instead, Neoid uses Neo4j's auto indexing feature.
+Model indexes (such as `users_index`) are now turned off by default. Instead, Lexster uses Neo4j's auto indexing feature.
 
 In order to have the model indexes back, use this in your configuration:
 
 ```ruby
-Neoid.configure do |c|
+Lexster.configure do |c|
   c.enable_per_model_indexes = true
 end
 ```
@@ -22,16 +22,16 @@ You can turn off for a specific model with:
 
 ```ruby
 class User < ActiveRecord::Base
-  include Neoid::Node
+  include Lexster::Node
   
-  neoidable enable_model_index: false do |c|
+  lexsterable enable_model_index: false do |c|
   end
 end
 ```
 
 ## v0.0.51
 
-* Releasing Neoid as a gem.
+* Releasing Lexster as a gem.
 
 ## v0.0.41
 
@@ -40,7 +40,7 @@ end
 ## v0.0.4
 
 * rewrote seacrch. one index for all types instead of one for type. please run neo_search_index on all of your models.
-  search in multiple types at once with `Neoid.search(types_array, term)
+  search in multiple types at once with `Lexster.search(types_array, term)
 
 ## v0.0.3
 

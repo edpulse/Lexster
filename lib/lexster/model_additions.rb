@@ -1,35 +1,35 @@
-module Neoid
+module Lexster
   module ModelAdditions
     module ClassMethods
-      attr_reader :neoid_config
+      attr_reader :lexster_config
       
-      def neoid_config
-        @neoid_config ||= Neoid::ModelConfig.new(self)
+      def lexster_config
+        @lexster_config ||= Lexster::ModelConfig.new(self)
       end
       
-      def neoidable(options = {})
+      def lexsterable(options = {})
         # defaults
-        neoid_config.auto_index = true
-        neoid_config.enable_model_index = true # but the Neoid.enable_per_model_indexes is false by default. all models will be true only if the primary option is turned on.
+        lexster_config.auto_index = true
+        lexster_config.enable_model_index = true # but the Lexster.enable_per_model_indexes is false by default. all models will be true only if the primary option is turned on.
 
-        yield(neoid_config) if block_given?
+        yield(lexster_config) if block_given?
 
         options.each do |key, value|
-          raise "Neoid #{self.name} model options: No such option #{key}" unless neoid_config.respond_to?("#{key}=")
-          neoid_config.send("#{key}=", value)
+          raise "Lexster #{self.name} model options: No such option #{key}" unless lexster_config.respond_to?("#{key}=")
+          lexster_config.send("#{key}=", value)
         end
       end
 
       def neo_model_index_name
-        raise "Per Model index is not enabled. Nodes/Relationships are auto indexed with node_auto_index/relationship_auto_index" unless Neoid.config.enable_per_model_indexes || neoid_config.enable_model_index
+        raise "Per Model index is not enabled. Nodes/Relationships are auto indexed with node_auto_index/relationship_auto_index" unless Lexster.config.enable_per_model_indexes || lexster_config.enable_model_index
         @index_name ||= "#{self.name.tableize}_index"
       end
     end
   
     module InstanceMethods
       def to_neo
-        if self.class.neoid_config.stored_fields
-          hash = self.class.neoid_config.stored_fields.inject({}) do |all, (field, block)|
+        if self.class.lexster_config.stored_fields
+          hash = self.class.lexster_config.stored_fields.inject({}) do |all, (field, block)|
             all[field] = if block
               instance_eval(&block)
             else
@@ -46,7 +46,7 @@ module Neoid
       end
 
       def neo_save_after_model_save
-        return unless self.class.neoid_config.auto_index
+        return unless self.class.lexster_config.auto_index
         neo_save
         true
       end
@@ -69,17 +69,17 @@ module Neoid
         begin
           neo_representation.del
         rescue Neography::NodeNotFoundException => e
-          Neoid::logger.info "Neoid#neo_destroy entity not found #{self.class.name} #{self.id}"
+          Lexster::logger.info "Lexster#neo_destroy entity not found #{self.class.name} #{self.id}"
         end
 
         # Not working yet because Neography can't delete a node and all of its realtionships in a batch, and deleting a node with relationships results an error
-        # if Neoid::Batch.current_batch
-        #   Neoid::Batch.current_batch << [self.class.delete_command, neo_representation.neo_id]
+        # if Lexster::Batch.current_batch
+        #   Lexster::Batch.current_batch << [self.class.delete_command, neo_representation.neo_id]
         # else
         #   begin
         #     neo_representation.del
         #   rescue Neography::NodeNotFoundException => e
-        #     Neoid::logger.info "Neoid#neo_destroy entity not found #{self.class.name} #{self.id}"
+        #     Lexster::logger.info "Lexster#neo_destroy entity not found #{self.class.name} #{self.id}"
         #   end
         # end
 

@@ -1,4 +1,4 @@
-require 'neoid'
+require 'lexster'
 require 'active_record'
 require 'neography'
 require 'rest-client'
@@ -19,7 +19,7 @@ Neography.configure do |c|
   end
 end
 
-Neoid.db = $neo
+Lexster.db = $neo
 
 logger, ActiveRecord::Base.logger = ActiveRecord::Base.logger, Logger.new('/dev/null')
 ActiveRecord::Base.configurations = YAML::load(IO.read(File.join(File.dirname(__FILE__), 'support/database.yml')))
@@ -37,10 +37,10 @@ RSpec.configure do |config|
   end
   
   config.before(:each) do
-    Neoid.node_models.each(&:destroy_all)
-    Neoid.clean_db(:yes_i_am_sure)
-    Neoid.reset_cached_variables
+    Lexster.node_models.each(&:destroy_all)
+    Lexster.clean_db(:yes_i_am_sure)
+    Lexster.reset_cached_variables
   end
 end
 
-Neoid.initialize_all
+Lexster.initialize_all

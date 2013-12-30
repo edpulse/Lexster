@@ -1,4 +1,4 @@
 source "http://rubygems.org"
 
-# Specify your gem's dependencies in neoid.gemspec
+# Specify your gem's dependencies in lexster.gemspec
 gemspec
