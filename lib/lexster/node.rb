@@ -77,14 +77,14 @@ module Lexster
         Lexster.search(self, term, options)
       end
     end
-    
+
     module InstanceMethods
       def neo_find_by_id
         # Lexster::logger.info "Node#neo_find_by_id #{self.class.neo_index_name} #{self.id}"
         node = Lexster.db.get_node_auto_index(Lexster::UNIQUE_ID_KEY, self.neo_unique_id)
         node.present? ? Lexster::Node.from_hash(node[0]) : nil
       end
-      
+
       def _neo_save
         return unless Lexster.enabled?
 
@@ -174,11 +174,11 @@ module Lexster
           self.send(field) rescue (raise "No field #{field} for #{self.class.name}")
         end
       end
-      
+
       def neo_load(hash)
         Lexster::Node.from_hash(hash)
       end
-      
+
       def neo_node
         _neo_representation
       end
@@ -199,7 +199,7 @@ module Lexster
         @__neo_temp_rels.delete(record)
       end
     end
-      
+
     def self.included(receiver)
       receiver.send :include, Lexster::ModelAdditions
       receiver.extend         ClassMethods

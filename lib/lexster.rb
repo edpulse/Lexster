@@ -22,11 +22,11 @@ module Lexster
     attr_accessor :ref_node
     attr_accessor :env_loaded
     attr_reader :config
-    
+
     def node_models
       @node_models ||= []
     end
-    
+
     def relationship_models
       @relationship_models ||= []
     end
@@ -59,7 +59,7 @@ module Lexster
       initialize_subrefs
       initialize_per_model_indexes
     end
-    
+
     def db
       raise "Must set Lexster.db with a Neography::Rest instance" unless @db
       @db
@@ -68,24 +68,23 @@ module Lexster
     def batch(options={}, &block)
       Lexster::Batch.new(options, &block).run
     end
-    
+
     def logger
       @logger ||= Logger.new(ENV['NEOID_LOG'] ? ENV['NEOID_LOG_FILE'] || $stdout : '/dev/null')
     end
-    
+
     def ref_node
       @ref_node ||= Neography::Node.load(Lexster.db.get_root['self'])
     end
-    
+
     def reset_cached_variables
       initialize_subrefs
     end
-    
+
     def clean_db(confirm)
       puts "must call with confirm: Lexster.clean_db(:yes_i_am_sure)" and return unless confirm == :yes_i_am_sure
       Lexster::NeoDatabaseCleaner.clean_db
     end
-    
 
     def enabled=(flag)
       Thread.current[:lexster_enabled] = flag
@@ -212,7 +211,7 @@ module Lexster
 
       def initialize_subrefs
         return unless config.enable_subrefs
-        
+
         node_models.each do |klass|
           klass.reset_neo_subref_node
         end

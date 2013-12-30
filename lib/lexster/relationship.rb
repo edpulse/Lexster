@@ -31,15 +31,15 @@ module Lexster
         relationship = results.present? ? Lexster::Relationship.from_hash(results[0]) : nil
         relationship
       end
-      
+
       def _neo_save
         return unless Lexster.enabled?
-        
+
         options = self.class.lexster_config.relationship_options
-        
         start_item = self.send(options[:start_node])
+
         end_item = self.send(options[:end_node])
-        
+
         return unless start_item && end_item
 
         # initialize nodes
@@ -85,14 +85,14 @@ module Lexster
         }
 
         Lexster::logger.info "Relationship#neo_save #{self.class.name} #{self.id}"
-        
+
         relationship = Lexster.execute_script_or_add_to_batch gremlin_query, script_vars do |value|
           Lexster::Relationship.from_hash(value)
         end
 
         relationship
       end
-      
+
       def neo_load(hash)
         Lexster::Relationship.from_hash(hash)
       end
@@ -106,7 +106,7 @@ module Lexster
       receiver.send :include, Lexster::ModelAdditions
       receiver.send :include, InstanceMethods
       receiver.extend         ClassMethods
-      
+
       initialize_relationship receiver if Lexster.env_loaded
 
       Lexster.relationship_models << receiver

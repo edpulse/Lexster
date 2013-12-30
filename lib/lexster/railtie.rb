@@ -9,7 +9,7 @@ module Lexster
     end
 
     initializer 'lexster.inject_middleware' do |app|
-      app.middleware.use Ndoid::Middleware
+      app.middleware.use Lexster::Middleware
     end
   end
 end

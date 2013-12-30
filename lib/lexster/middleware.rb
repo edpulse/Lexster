@@ -1,4 +1,4 @@
-module Ndoid
+module Lexster
   class Middleware
     def initialize(app)
       @app = app

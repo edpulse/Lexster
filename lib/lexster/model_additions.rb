@@ -2,11 +2,11 @@ module Lexster
   module ModelAdditions
     module ClassMethods
       attr_reader :lexster_config
-      
+
       def lexster_config
         @lexster_config ||= Lexster::ModelConfig.new(self)
       end
-      
+
       def lexsterable(options = {})
         # defaults
         lexster_config.auto_index = true
@@ -25,7 +25,7 @@ module Lexster
         @index_name ||= "#{self.name.tableize}_index"
       end
     end
-  
+
     module InstanceMethods
       def to_neo
         if self.class.lexster_config.stored_fields
@@ -35,7 +35,7 @@ module Lexster
             else
               self.send(field) rescue (raise "No field #{field} for #{self.class.name}")
             end
-            
+
             all
           end
 

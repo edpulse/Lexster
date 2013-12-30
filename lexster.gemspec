@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.email       = ["nelsonwittwer@gmail.com"]
   s.homepage    = ""
   s.summary     = %q{Titan for ActiveRecord}
-  s.description = %q{Extend Ruby on Rails ActiveRecord with Titan nodes. Keep RDBMS and utilize the power of Gremlin queries. Fork of Neoid.}
+  s.description = %q{Extend Ruby on Rails ActiveRecord with Titan nodes. Keep RDBMS and utilize the power of Gremlin queries. Fork of Neoid gem.}
 
   s.rubyforge_project = "lexster"
 
@@ -24,5 +24,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'activerecord'
   s.add_development_dependency 'sqlite3'
 
-  s.add_runtime_dependency 'neography'
+  s.add_runtime_dependency 'rexpro'
 end

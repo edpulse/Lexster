@@ -4,7 +4,7 @@ module Lexster
       @response = response || []
       @models = models
     end
-    
+
     def hits
       @response.map { |x| Neography::Node.new(x) }
     end
@@ -12,7 +12,7 @@ module Lexster
     def ids
       @response.collect { |x| x['data']['ar_id'] }
     end
-    
+
     def results
       models_by_name = @models.inject({}) { |all, curr| all[curr.name] = curr; all }
 

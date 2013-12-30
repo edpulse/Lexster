@@ -67,7 +67,7 @@ module Lexster
 
       begin
         @block.call(self)
-      ensure      
+      ensure
         self.class.reset_current_batch
       end
 
